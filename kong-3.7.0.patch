@@ -1,0 +1,79 @@
+diff --git a/build/nfpm/repositories.bzl b/build/nfpm/repositories.bzl
+index b865a6e89..a97d1971c 100644
+--- a/build/nfpm/repositories.bzl
++++ b/build/nfpm/repositories.bzl
+@@ -15,6 +15,8 @@ def _nfpm_release_select_impl(ctx):
+         os_arch = "arm64"
+     elif os_arch == "amd64":
+         os_arch = "x86_64"
++    elif os_arch == "s390x":
++        os_arch = "s390x"
+     else:
+         fail("Unsupported arch %s" % os_arch)
+ 
+@@ -38,7 +40,8 @@ def nfpm_repositories():
+     npfm_matrix = [
+         ["linux", "x86_64", "6dd3b07d4d6ee373baea5b5fca179ebf78dec38c9a55392bae34040e596e4de7"],
+         ["linux", "arm64", "e6487dca9d9e9b1781fe7fa0a3d844e70cf12d92f3b5fc0c4ff771aa776b05ca"],
+-        ["Darwin", "x86_64", "19954ef8e6bfa0607efccd0a97452b6d571830665bd76a2f9957413f93f9d8cd"],
++       ["linux", "s390x", "6dd3b07d4d6ee373baea5b5fca179ebf78dec38c9a55392bae34040e596e4de7"],
++       ["Darwin", "x86_64", "19954ef8e6bfa0607efccd0a97452b6d571830665bd76a2f9957413f93f9d8cd"],
+         ["Darwin", "arm64", "9fd82cda017cdfd49b010199a2eed966d0a645734d9a6bf932c4ef82c8c12c96"],
+     ]
+     for name, arch, sha in npfm_matrix:
+diff --git a/build/nfpm/rules.bzl b/build/nfpm/rules.bzl
+index d6f5bb94f..2dd7b0d97 100644
+--- a/build/nfpm/rules.bzl
++++ b/build/nfpm/rules.bzl
+@@ -13,6 +13,8 @@ def _nfpm_pkg_impl(ctx):
+         target_arch = "amd64"
+     elif target_cpu == "aarch64" or target_cpu == "arm64":
+         target_arch = "arm64"
++    if target_cpu == "s390" or target_cpu == "s390x":
++        target_arch = "s390x"
+     else:
+         fail("Unsupported platform cpu: %s" % target_cpu)
+     env["ARCH"] = target_arch
+@@ -24,7 +26,7 @@ def _nfpm_pkg_impl(ctx):
+     if pkg_ext == "apk":
+         pkg_ext = "apk.tar.gz"
+ 
+-    # create like kong.amd64.deb
++    # create like kong.<target_arch>.deb
+     out = ctx.actions.declare_file("%s/%s.%s.%s" % (
+         ctx.attr.out_dir,
+         ctx.attr.pkg_name,
+@@ -41,7 +43,7 @@ def _nfpm_pkg_impl(ctx):
+     ctx.actions.run_shell(
+         inputs = ctx.files._nfpm_bin,
+         mnemonic = "nFPM",
+-        command = "ln -sf %s nfpm-prefix; external/nfpm/nfpm $@" % KONG_VAR["BUILD_DESTDIR"],
++        command = "ln -sf %s nfpm-prefix; build/nfpm/nfpm $@" % KONG_VAR["BUILD_DESTDIR"],
+         arguments = [nfpm_args],
+         outputs = [out],
+         env = env,
+diff --git a/build/openresty/BUILD.openresty.bazel b/build/openresty/BUILD.openresty.bazel
+index f840a650a..cab232795 100644
+--- a/build/openresty/BUILD.openresty.bazel
++++ b/build/openresty/BUILD.openresty.bazel
+@@ -98,6 +98,7 @@ make(
+         "-j" + KONG_VAR["NPROC"],
+         "install",
+     ],
++    postfix_script = "make clean; ASFLAGS= make all PREFIX=$INSTALLDIR; ASFLAGS= make install PREFIX=$INSTALLDIR",
+     visibility = ["//visibility:public"],
+ )
+ 
+diff --git a/kong/pdk/nginx.lua b/kong/pdk/nginx.lua
+index f5715e03e..c3cdf3765 100644
+--- a/kong/pdk/nginx.lua
++++ b/kong/pdk/nginx.lua
+@@ -12,7 +12,7 @@ local arch = ffi.arch
+ local ngx  = ngx
+ local tonumber = tonumber
+ 
+-if arch == "x64" or arch == "arm64" then
++if arch == "x64" or arch == "s390x" or arch == "arm64" then
+   ffi.cdef[[
+     uint64_t *ngx_stat_active;
+     uint64_t *ngx_stat_reading;
