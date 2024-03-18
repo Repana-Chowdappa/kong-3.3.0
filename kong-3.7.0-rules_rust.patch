@@ -1,0 +1,23 @@
+diff --git a/rust/platform/triple.bzl b/rust/platform/triple.bzl
+index 1d07ce2e..673240e8 100644
+--- a/rust/platform/triple.bzl
++++ b/rust/platform/triple.bzl
+@@ -114,7 +114,7 @@ def get_host_triple(repository_ctx, abi = None):
+     # Detect the host's cpu architecture
+ 
+     supported_architectures = {
+-        "linux": ["aarch64", "x86_64"],
++        "linux": ["aarch64", "x86_64", "s390x"],
+         "macos": ["aarch64", "x86_64"],
+         "windows": ["aarch64", "x86_64"],
+     }
+diff --git a/rust/repositories.bzl b/rust/repositories.bzl
+index 98d179fb..fdc6410e 100644
+--- a/rust/repositories.bzl
++++ b/rust/repositories.bzl
+@@ -43,6 +43,7 @@ DEFAULT_TOOLCHAIN_TRIPLES = {
+     "x86_64-pc-windows-msvc": "rust_windows_x86_64",
+     "x86_64-unknown-freebsd": "rust_freebsd_x86_64",
+     "x86_64-unknown-linux-gnu": "rust_linux_x86_64",
++    "s390x-unknown-linux-gnu": "rust_linux_s390x",
+ }
