@@ -103,9 +103,9 @@ cargo install cross --version 0.2.1
 
 #Install Golang
 cd $wdir
-wget https://go.dev/dl/go1.20.5.linux-ppc64le.tar.gz
-rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-ppc64le.tar.gz
-rm -rf go1.20.5.linux-ppc64le.tar.gz
+wget https://go.dev/dl/go1.23.1.linux-s390x.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.23.1.linux-s390x.tar.gz
+rm -rf go1.23.1.linux-s390x.tar.gz
 export PATH=$PATH:/usr/local/go/bin
 go version
 go install github.com/go-task/task/v3/cmd/task@latest
@@ -122,8 +122,8 @@ git apply $wdir/kong-${PACKAGE_VERSION}-rules_rust.patch
 
 #Build cargo-bazel native binary
 cd crate_universe
-cross build --release --locked --bin cargo-bazel --target=powerpc64le-unknown-linux-gnu
-export CARGO_BAZEL_GENERATOR_URL=file://$(pwd)/target/powerpc64le-unknown-linux-gnu/release/cargo-bazel
+cross build --release --locked --bin cargo-bazel --target=s390x-unknown-linux-gnu
+export CARGO_BAZEL_GENERATOR_URL=file://$(pwd)/target/s390x-unknown-linux-gnu/release/cargo-bazel
 echo "cargo-bazel build successful!"
 popd
 
